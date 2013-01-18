@@ -1,0 +1,34 @@
+{
+  "name": "sshp",
+  "description": "simple, intuitive, no bullshit approach to parallel ssh",
+  "version": "0.0.0",
+  "author": "Dave Eddy <dave@daveeddy.com> (http://www.daveeddy.com)",
+  "contributors": [],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bahamas10/node-sshp.git"
+  },
+  "bin": {
+    "sshp": "./sshp.js"
+  },
+  "scripts": {
+    "test": "for f in tests/*.js; do echo \"$f\"; node \"$f\" || exit 1; done; echo 'Passed!'"
+  },
+  "dependencies": {
+    "posix-getopt": "~1.0.0",
+    "colors": "~0.6.0-1",
+    "latest": "~0.1.0",
+    "lazylines": "~1.0.0",
+    "async": "~0.1.22"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  },
+  "keywords": [
+    "ssh",
+    "parallel",
+    "concurrent"
+  ]
+}
