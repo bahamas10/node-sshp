@@ -29,30 +29,40 @@ Examples
 
 Picture to come soon, lots of pretty colors used
 
+Parallel ssh into hosts supplied by a file, running `uname -v`
+
     $ cat hosts.txt
-    host1.example.com
-    host2.example.com
-    host3.example.com
+    arbiter.hyrule.com
+    datadyne.hyrule.com
+    gvoice.hyrule.com
     $ sshp -f hosts.txt uname -v
-    [sshp] starting: 2013-01-18T22:49:29.622Z
-    [sshp] hosts: [ 'host1.example.com', 'host2.example.com', 'host3.example.com' ]
+    [sshp] starting: 2013-01-19T00:57:23.224Z
+    [sshp] hosts: [ 'arbiter.hyrule.com', 'datadyne.hyrule.com', 'gvoice.hyrule.com' ]
     [sshp] command: [ 'uname', '-v' ]
     [sshp] maxjobs: 30
-    [sshp] [host1.example.com] [ 'ssh', 'host1.example.com', 'uname', '-v' ]
-    [sshp] [host2.example.com] [ 'ssh', 'host2.example.com', 'uname', '-v' ]
-    [sshp] [host3.example.com] [ 'ssh', 'host3.example.com', 'uname', '-v' ]
-    [host1.example.com] SunOS host1 5.11 joyent_20120126T071347Z i86pc i386 i86pc Solaris
-    [host2.example.com] SunOS host2 5.11 joyent_20120126T071347Z i86pc i386 i86pc Solaris
-    [host3.example.com] SunOS host3 5.11 joyent_20120126T071347Z i86pc i386 i86pc Solaris
-    [host1.example.com] exited: 0 (633 ms)
-    [host3.example.com] exited: 0 (673 ms)
-    [host2.example.com] exited: 0 (646 ms)
-    [sshp] finished: 2013-01-18T22:49:30.257Z (702 ms)
+    [sshp] [arbiter.hyrule.com] [ 'ssh', 'arbiter.hyrule.com', 'uname', '-v' ]
+    [sshp] [datadyne.hyrule.com] [ 'ssh', 'datadyne.hyrule.com', 'uname', '-v' ]
+    [sshp] [gvoice.hyrule.com] [ 'ssh', 'gvoice.hyrule.com', 'uname', '-v' ]
+    [gvoice.hyrule.com] joyent_20120921T180038Z
+    [gvoice.hyrule.com] exited: 0 (263 ms)
+    [arbiter.hyrule.com] joyent_20120921T180038Z
+    [arbiter.hyrule.com] exited: 0 (275 ms)
+    [datadyne.hyrule.com] oi_151a6
+    [datadyne.hyrule.com] exited: 0 (303 ms)
+    [sshp] finished: 2013-01-19T00:57:23.533Z (309 ms)
+
+The same ssh on the same file, with the `--silent` flag present
+
+    $ sshp -s -f hosts.txt uname -v
+    [gvoice.hyrule.com] joyent_20120921T180038Z
+    [arbiter.hyrule.com] joyent_20120921T180038Z
+    [datadyne.hyrule.com] oi_151a6
+
 
 Usage
 -----
 
-    Usage: sshp [-P maxjobs] [-f file] command ...
+    Usage: sshp [-m maxjobs] [-f file] command ...
 
     parallel ssh with streaming output
 
@@ -64,15 +74,17 @@ Usage
       ssh into a list of hosts passed on the command line, limit max parallel
       connections to 3, and grab the output of ps piped to grep on the remote end
 
-        sshp -P 3 -f my_hosts.txt "ps -ef | grep process"
+        sshp -m 3 -f my_hosts.txt "ps -ef | grep process"
 
     options
       -f, --file       a file of hosts separated by newlines
       -h, --help       print this message and exit
       -l, --login      the username to login as, passed directly to ssh
+      -m, --maxjobs    the maximum number of jobs to run concurrently
+      -n, --no-strict  disable strict host key checking for ssh
       -p, --port       the ssh port, passed directly to ssh
-      -P, --maxjobs    the maximum number of jobs to run concurrently
-      -q, --quiet      if present, a `-q` will be passed to the ssh command
+      -q, --quiet      pass -q directly to `ssh`
+      -s, --silent     silence all debug information from sshp
       -u, --updates    check for available updates
       -v, --version    print the version number and exit
 

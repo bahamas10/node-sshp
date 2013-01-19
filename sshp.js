@@ -29,7 +29,7 @@ require('colors');
  */
 function usage() {
   return [
-    'Usage: sshp [-P maxjobs] [-f file] command ...',
+    'Usage: sshp [-m maxjobs] [-f file] command ...',
     '',
     'parallel ssh with streaming output',
     '',
@@ -41,15 +41,17 @@ function usage() {
     '  ssh into a list of hosts passed on the command line, limit max parallel',
     '  connections to 3, and grab the output of ps piped to grep on the remote end',
     '',
-    '    sshp -P 3 -f my_hosts.txt "ps -ef | grep process"',
+    '    sshp -m 3 -f my_hosts.txt "ps -ef | grep process"',
     '',
     'options',
     '  -f, --file       a file of hosts separated by newlines',
     '  -h, --help       print this message and exit',
     '  -l, --login      the username to login as, passed directly to ssh',
+    '  -m, --maxjobs    the maximum number of jobs to run concurrently',
+    '  -n, --no-strict  disable strict host key checking for ssh',
     '  -p, --port       the ssh port, passed directly to ssh',
-    '  -P, --maxjobs    the maximum number of jobs to run concurrently',
-    '  -q, --quiet      if present, a `-q` will be passed to the ssh command',
+    '  -q, --quiet      pass -q directly to `ssh`',
+    '  -s, --silent     silence all debug information from sshp',
     '  -u, --updates    check for available updates',
     '  -v, --version    print the version number and exit'
   ].join('\n');
@@ -57,6 +59,7 @@ function usage() {
 
 // verbose log
 function vlog() {
+  if (silent) return;
   var s = util.format.apply(this, arguments);
   console.log('[%s] %s', 'sshp'.cyan, s);
 }
@@ -71,15 +74,17 @@ function insarray(arr) {
 }
 
 // command line arguments
-var options = 'f:(file)h(help)l:(login)p:(port)P:(maxjobs)q(quiet)u(updates)v(version)';
+var options = 'f:(file)h(help)m:(maxjobs)l:(login)n(no-strict)p:(port)q(quiet)s(silent)u(updates)v(version)';
 var parser = new getopt.BasicParser(options, process.argv);
 
 var option;
 var file;
 var login;
 var maxjobs = 30;
+var nostrict = false;
 var port;
 var quiet = false;
+var silent = false;
 while ((option = parser.getopt()) !== undefined) {
   switch (option.option) {
     case 'f': // file
@@ -92,14 +97,20 @@ while ((option = parser.getopt()) !== undefined) {
     case 'l': // login
       login = option.optarg;
       break;
+    case 'm': // maxjobs
+      maxjobs = +option.optarg;
+      break;
+    case 'n': // no-strict
+      nostrict = true;
+      break;
     case 'p': // port
       port = +option.optarg;
       break;
-    case 'P': // maxjobs
-      maxjobs = +option.optarg;
-      break;
     case 'q': // quiet
       quiet = true;
+      break;
+    case 's': // silent
+      silent = true;
       break;
     case 'u': // check for updates
       latest.checkupdate(package, function(ret, msg) {
@@ -135,6 +146,7 @@ var sshcommand = ['ssh'];
 if (quiet) sshcommand.push('-q');
 if (port) sshcommand.push('-p', port);
 if (login) sshcommand.push('-l', login);
+if (nostrict) sshcommand.push('-o', 'StrictHostKeyChecking=no');
 
 // make a queue
 var q = async.queue(processhost, maxjobs);
@@ -172,9 +184,11 @@ function processhost(host, cb) {
 
   // capture the exit
   child.on('exit', function(code) {
-    var delta = new Date() - started;
-    console.log('[%s] exited: %s (%s ms)', host.cyan,
-        code === 0 ? ('' + code).green : ('' + code).red, ('' + delta).magenta);
+    if (!silent) {
+      var delta = new Date() - started;
+      console.log('[%s] exited: %s (%s ms)', host.cyan,
+          code === 0 ? ('' + code).green : ('' + code).red, ('' + delta).magenta);
+    }
     cb();
   });
 }
