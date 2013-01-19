@@ -44,22 +44,26 @@ function usage() {
     '    sshp -m 3 -f my_hosts.txt "ps -ef | grep process"',
     '',
     'options',
-    '  -f, --file       a file of hosts separated by newlines',
-    '  -h, --help       print this message and exit',
-    '  -l, --login      the username to login as, passed directly to ssh',
-    '  -m, --maxjobs    the maximum number of jobs to run concurrently',
-    '  -n, --no-strict  disable strict host key checking for ssh',
-    '  -p, --port       the ssh port, passed directly to ssh',
-    '  -q, --quiet      pass -q directly to `ssh`',
-    '  -s, --silent     silence all debug information from sshp',
-    '  -u, --updates    check for available updates',
-    '  -v, --version    print the version number and exit'
+    '  -d, --debug       turn on debugging information, defaults to false',
+    '  -e, --exit-codes  print the exit code of the remote processes, defaults to false',
+    '  -f, --file        a file of hosts separated by newlines, defaults to stdin',
+    '  -h, --help        print this message and exit',
+    '  -i, --identity    ssh identity file to use, passed directly to ssh',
+    '  -l, --login       the username to login as, passed directly to ssh',
+    '  -m, --maxjobs     the maximum number of jobs to run concurrently, defaults to 30',
+    '  -n, --dry-run     print debug information without actually running any commands',
+    '  -N, --no-strict   disable strict host key checking for ssh, defaults to false',
+    '  -p, --port        the ssh port, passed directly to ssh',
+    '  -q, --quiet       pass -q directly to `ssh`',
+    '  -s, --silent      silence all stdout and stderr from remote hosts, defaults to false',
+    '  -u, --updates     check for available updates',
+    '  -v, --version     print the version number and exit'
   ].join('\n');
 }
 
 // verbose log
 function vlog() {
-  if (silent) return;
+  if (!debug) return;
   var s = util.format.apply(this, arguments);
   console.log('[%s] %s', 'sshp'.cyan, s);
 }
@@ -74,11 +78,31 @@ function insarray(arr) {
 }
 
 // command line arguments
-var options = 'f:(file)h(help)m:(maxjobs)l:(login)n(no-strict)p:(port)q(quiet)s(silent)u(updates)v(version)';
+var options = [
+  'd(debug)',
+  'e(exit-codes)',
+  'f:(file)',
+  'g(group)',
+  'h(help)',
+  'i:(identity)',
+  'l:(login)',
+  'm:(max-jobs)',
+  'n(dry-run)',
+  'N(no-strict)',
+  'p:(port)',
+  'q(quiet)',
+  's(silent)',
+  'u(updates)',
+  'v(version)'
+].join('');
 var parser = new getopt.BasicParser(options, process.argv);
 
 var option;
+var debug = false;
+var dryrun = false;
+var errorcodes = false;
 var file;
+var group = false;
 var login;
 var maxjobs = 30;
 var nostrict = false;
@@ -87,46 +111,27 @@ var quiet = false;
 var silent = false;
 while ((option = parser.getopt()) !== undefined) {
   switch (option.option) {
-    case 'f': // file
-      file = option.optarg;
-      break;
-    case 'h': // help
-      console.log(usage());
-      process.exit(0);
-      break;
-    case 'l': // login
-      login = option.optarg;
-      break;
-    case 'm': // maxjobs
-      maxjobs = +option.optarg;
-      break;
-    case 'n': // no-strict
-      nostrict = true;
-      break;
-    case 'p': // port
-      port = +option.optarg;
-      break;
-    case 'q': // quiet
-      quiet = true;
-      break;
-    case 's': // silent
-      silent = true;
-      break;
+    case 'd': debug = true; break;
+    case 'e': errorcodes = true; break;
+    case 'f': file = option.optarg; break;
+    case 'g': group = true; break;
+    case 'h': console.log(usage()); process.exit(0);
+    case 'i': identity = option.optarg; break;
+    case 'l': login = option.optarg; break;
+    case 'm': maxjobs = +option.optarg; break;
+    case 'n': dryrun = true; debug = true; break;
+    case 'N': nostrict = true; break;
+    case 'p': port = +option.optarg; break;
+    case 'q': quiet = true; break;
+    case 's': silent = true; break;
     case 'u': // check for updates
       latest.checkupdate(package, function(ret, msg) {
         console.log(msg);
         process.exit(ret);
       });
       return;
-      break;
-    case 'v': // version
-      console.log(package.version);
-      process.exit(0);
-      break;
-    default:
-      console.error(usage());
-      process.exit(1);
-      break;
+    case 'v': console.log(package.version); process.exit(0);
+    default: console.error(usage()); process.exit(1); break;
   }
 }
 var command = process.argv.slice(parser.optind());
@@ -137,7 +142,7 @@ var hosts = fs.readFileSync(file).toString().split('\n').filter(function(a) { re
 
 var progstart = new Date();
 vlog('starting: %s', progstart.toISOString());
-vlog('hosts: %s', insarray(hosts));
+vlog('hosts (%s): %s', ('' + hosts.length).magenta, insarray(hosts));
 vlog('command: %s', insarray(command));
 vlog('maxjobs: %s', ('' + maxjobs).green);
 
@@ -159,32 +164,71 @@ q.drain = function() {
   var progend = new Date();
   var delta = progend - progstart;
   vlog('finished: %s (%s ms)', progend.toISOString(), ('' + delta).magenta);
+  process.exit(exitcode);
 };
+
+var exitcode = 0;
+var lasthost;
 
 // the function the queue should call for each host
 function processhost(host, cb) {
   var started = new Date();
   var cmd = sshcommand.concat(host, command);
-  var child = child_process.spawn(cmd[0], cmd.slice(1));
   vlog('[%s] %s', host.yellow, insarray(cmd));
+  if (dryrun) return cb();
+
+  var child = child_process.spawn(cmd[0], cmd.slice(1));
 
   // hook up stdout
-  var stdout = new ll.LineReadStream(child.stdout);
-  stdout.on('line', function(line) {
-    line = ll.chomp(line);
-    console.log('[%s] %s', host.cyan, line.green);
-  });
+  if (group) {
+    child.stdout.on('data', out)
+  } else {
+    var stdout = new ll.LineReadStream(child.stdout);
+    stdout.on('line', out);
+  }
+  function out(d) {
+    if (silent) return;
+    d = d.toString();
+
+    if (group) {
+      if (host !== lasthost) {
+        console.log('[%s] ', host.cyan);
+        lasthost = host;
+      }
+      process.stdout.write(d.green);
+    } else {
+      line = ll.chomp(d);
+      console.log('[%s] %s', host.cyan, line.green);
+    }
+  }
 
   // hook up stderr
-  var stderr = new ll.LineReadStream(child.stderr);
-  stderr.on('line', function(line) {
-    line = ll.chomp(line);
-    console.log('[%s] %s', host.cyan, line.red);
-  });
+  if (group) {
+    child.stderr.on('data', err);
+  } else {
+    var stderr = new ll.LineReadStream(child.stderr);
+    stderr.on('line', err);
+  }
+  function err(d) {
+    if (silent) return;
+    d = d.toString();
+
+    if (group) {
+      if (host !== lasthost) {
+        console.log('[%s] ', host.cyan);
+        lasthost = host;
+      }
+      process.stderr.write(d.red);
+    } else {
+      line = ll.chomp(d);
+      console.error('[%s] %s', host.cyan, line.red);
+    }
+  }
 
   // capture the exit
   child.on('exit', function(code) {
-    if (!silent) {
+    exitcode += code;
+    if (errorcodes) {
       var delta = new Date() - started;
       console.log('[%s] exited: %s (%s ms)', host.cyan,
           code === 0 ? ('' + code).green : ('' + code).red, ('' + delta).magenta);
