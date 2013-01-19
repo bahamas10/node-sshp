@@ -11,18 +11,19 @@ Installation
 Why?
 ---
 
-there are thousands of programs that do this, but none of them do it well. I wanted
-something simple, visual, non-assumptive, and cross-platform compatible.
+there are thousands of programs that do this, but none of them do it well. I
+wanted something simple, visual, non-assumptive, and cross-platform compatible.
 
-It's really simple, it takes a command to run (pass directly to `ssh`), and a list
-of hosts with `-f file` or passed in over stdin.  For every line of output from the
-remote hosts, the hostname will be prepended and printed out to the user.  All stderr
-appears red, and stdout green.  The exit code will be printed as soon as it is avaliable,
-green for 0, red for != 0.  The deltas will be printed for all operations so you know
-how long things took.
+sshp is really simple, it takes a command to run (pass directly to `ssh`), and
+a list of hosts with `-f file` or passed in over stdin.  For every line of
+output from the remote hosts, the hostname will be prepended and printed out to
+the user.  All stderr appears red and is written to stderr on the local
+machine, and stdout green to stdout.  The exit code will be printed as soon as
+it is avaliable if `-e` is supplied, green for 0, red for != 0, as well as the ms
+deltas for all operations so you know how long things took.
 
-Most importantly, you can specify the maximum number of concurrent `ssh` connections to use
-with `-P` or `--maxjobs`.
+Most importantly, you can specify the maximum number of concurrent `ssh`
+connections to use with `-m` or `--maxjobs`.
 
 Examples
 --------
@@ -36,28 +37,9 @@ Parallel ssh into hosts supplied by a file, running `uname -v`
     datadyne.hyrule.com
     gvoice.hyrule.com
     $ sshp -f hosts.txt uname -v
-    [sshp] starting: 2013-01-19T00:57:23.224Z
-    [sshp] hosts: [ 'arbiter.hyrule.com', 'datadyne.hyrule.com', 'gvoice.hyrule.com' ]
-    [sshp] command: [ 'uname', '-v' ]
-    [sshp] maxjobs: 30
-    [sshp] [arbiter.hyrule.com] [ 'ssh', 'arbiter.hyrule.com', 'uname', '-v' ]
-    [sshp] [datadyne.hyrule.com] [ 'ssh', 'datadyne.hyrule.com', 'uname', '-v' ]
-    [sshp] [gvoice.hyrule.com] [ 'ssh', 'gvoice.hyrule.com', 'uname', '-v' ]
-    [gvoice.hyrule.com] joyent_20120921T180038Z
-    [gvoice.hyrule.com] exited: 0 (263 ms)
-    [arbiter.hyrule.com] joyent_20120921T180038Z
-    [arbiter.hyrule.com] exited: 0 (275 ms)
-    [datadyne.hyrule.com] oi_151a6
-    [datadyne.hyrule.com] exited: 0 (303 ms)
-    [sshp] finished: 2013-01-19T00:57:23.533Z (309 ms)
-
-The same ssh on the same file, with the `--silent` flag present
-
-    $ sshp -s -f hosts.txt uname -v
     [gvoice.hyrule.com] joyent_20120921T180038Z
     [arbiter.hyrule.com] joyent_20120921T180038Z
     [datadyne.hyrule.com] oi_151a6
-
 
 Usage
 -----
@@ -77,16 +59,20 @@ Usage
         sshp -m 3 -f my_hosts.txt "ps -ef | grep process"
 
     options
-      -f, --file       a file of hosts separated by newlines
-      -h, --help       print this message and exit
-      -l, --login      the username to login as, passed directly to ssh
-      -m, --maxjobs    the maximum number of jobs to run concurrently
-      -n, --no-strict  disable strict host key checking for ssh
-      -p, --port       the ssh port, passed directly to ssh
-      -q, --quiet      pass -q directly to `ssh`
-      -s, --silent     silence all debug information from sshp
-      -u, --updates    check for available updates
-      -v, --version    print the version number and exit
+      -d, --debug       turn on debugging information, defaults to false
+      -e, --exit-codes  print the exit code of the remote processes, defaults to false
+      -f, --file        a file of hosts separated by newlines, defaults to stdin
+      -h, --help        print this message and exit
+      -i, --identity    ssh identity file to use, passed directly to ssh
+      -l, --login       the username to login as, passed directly to ssh
+      -m, --maxjobs     the maximum number of jobs to run concurrently, defaults to 30
+      -n, --dry-run     print debug information without actually running any commands
+      -N, --no-strict   disable strict host key checking for ssh, defaults to false
+      -p, --port        the ssh port, passed directly to ssh
+      -q, --quiet       pass -q directly to `ssh`
+      -s, --silent      silence all stdout and stderr from remote hosts, defaults to false
+      -u, --updates     check for available updates
+      -v, --version     print the version number and exit
 
 License
 -------
