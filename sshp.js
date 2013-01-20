@@ -47,6 +47,7 @@ function usage() {
     '  -d, --debug       turn on debugging information, defaults to false',
     '  -e, --exit-codes  print the exit code of the remote processes, defaults to false',
     '  -f, --file        a file of hosts separated by newlines, defaults to stdin',
+    '  -g, --group       group the output together as it comes in by hostname, not line-by-line',
     '  -h, --help        print this message and exit',
     '  -i, --identity    ssh identity file to use, passed directly to ssh',
     '  -l, --login       the username to login as, passed directly to ssh',
