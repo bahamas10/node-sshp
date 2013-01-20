@@ -47,6 +47,7 @@ function usage() {
     '  -d, --debug       turn on debugging information, defaults to false',
     '  -e, --exit-codes  print the exit code of the remote processes, defaults to false',
     '  -f, --file        a file of hosts separated by newlines, defaults to stdin',
+    '  -g, --group       group the output together as it comes in by hostname, not line-by-line',
     '  -h, --help        print this message and exit',
     '  -i, --identity    ssh identity file to use, passed directly to ssh',
     '  -l, --login       the username to login as, passed directly to ssh',
@@ -54,7 +55,7 @@ function usage() {
     '  -n, --dry-run     print debug information without actually running any commands',
     '  -N, --no-strict   disable strict host key checking for ssh, defaults to false',
     '  -p, --port        the ssh port, passed directly to ssh',
-    '  -q, --quiet       pass -q directly to `ssh`',
+    '  -q, --quiet       run ssh in quiet mode, passed directly to ssh',
     '  -s, --silent      silence all stdout and stderr from remote hosts, defaults to false',
     '  -u, --updates     check for available updates',
     '  -v, --version     print the version number and exit'
