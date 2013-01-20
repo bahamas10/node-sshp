@@ -70,7 +70,7 @@ Usage
       -n, --dry-run     print debug information without actually running any commands
       -N, --no-strict   disable strict host key checking for ssh, defaults to false
       -p, --port        the ssh port, passed directly to ssh
-      -q, --quiet       pass -q directly to `ssh`
+      -q, --quiet       run ssh in quiet mode, passed directly to ssh
       -s, --silent      silence all stdout and stderr from remote hosts, defaults to false
       -u, --updates     check for available updates
       -v, --version     print the version number and exit
