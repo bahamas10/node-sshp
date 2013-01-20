@@ -50,7 +50,7 @@ function usage() {
     '  -h, --help        print this message and exit',
     '  -i, --identity    ssh identity file to use, passed directly to ssh',
     '  -l, --login       the username to login as, passed directly to ssh',
-    '  -m, --maxjobs     the maximum number of jobs to run concurrently, defaults to 30',
+    '  -m, --max-jobs    the maximum number of jobs to run concurrently, defaults to 30',
     '  -n, --dry-run     print debug information without actually running any commands',
     '  -N, --no-strict   disable strict host key checking for ssh, defaults to false',
     '  -p, --port        the ssh port, passed directly to ssh',
