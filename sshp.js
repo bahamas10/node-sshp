@@ -15,7 +15,6 @@ var util = require('util');
 
 var async = require('async');
 var getopt = require('posix-getopt');
-var latest = require('latest');
 var ll = require('lazylines');
 
 var package = require('./package.json');
@@ -126,7 +125,7 @@ while ((option = parser.getopt()) !== undefined) {
     case 'q': quiet = true; break;
     case 's': silent = true; break;
     case 'u': // check for updates
-      latest.checkupdate(package, function(ret, msg) {
+      require('latest').checkupdate(package, function(ret, msg) {
         console.log(msg);
         process.exit(ret);
       });
