@@ -25,6 +25,8 @@ deltas for all operations so you know how long things took.
 Most importantly, you can specify the maximum number of concurrent `ssh`
 connections to use with `-m` or `--max-jobs`.
 
+Send a `SIGUSR1` to the process to get the current progress (like dd(1))
+
 Examples
 --------
 

@@ -77,6 +77,12 @@ function insarray(arr) {
   return util.format('[ %s ]', items.join(', '));
 }
 
+// print progress
+function progress() {
+  console.log('[%s] finished %s/%s',
+      'sshp'.cyan, ('' + i).magenta, ('' + hosts.length).magenta);
+}
+
 // command line arguments
 var options = [
   'd(debug)',
@@ -142,6 +148,7 @@ var hosts = fs.readFileSync(file).toString().split('\n').filter(function(a) { re
 
 var progstart = new Date();
 vlog('starting: %s', progstart.toISOString());
+vlog('pid: %s', ('' + process.pid).magenta);
 vlog('hosts (%s): %s', ('' + hosts.length).magenta, insarray(hosts));
 vlog('command: %s', insarray(command));
 vlog('maxjobs: %s', ('' + maxjobs).green);
@@ -170,6 +177,10 @@ q.drain = function() {
 var exitcode = 0;
 var lasthost;
 
+// dump progess on SIGUSR1
+process.on('SIGUSR1', progress);
+
+var i = 0;
 // the function the queue should call for each host
 function processhost(host, cb) {
   var started = new Date();
@@ -233,6 +244,7 @@ function processhost(host, cb) {
       console.log('[%s] exited: %s (%s ms)', host.cyan,
           code === 0 ? ('' + code).green : ('' + code).red, ('' + delta).magenta);
     }
+    ++i;
     cb();
   });
 }
