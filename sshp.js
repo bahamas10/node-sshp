@@ -180,6 +180,7 @@ var output = {};
 
 // loop the hosts and go!
 hosts.forEach(function(host) {
+  output[host] = '';
   q.push(host, function() {});
 });
 q.drain = function() {
@@ -202,7 +203,7 @@ q.drain = function() {
     keys.forEach(function(text) {
       var hosts = diff[text];
       console.log('hosts: %s'.grey, hosts.join(' ').cyan);
-      console.log(text);
+      console.log(text || 'no output'.grey);
     });
   }
 
