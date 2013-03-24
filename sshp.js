@@ -49,6 +49,7 @@ function usage() {
     '  -g, --group       group the output together as it comes in by hostname, not line-by-line',
     '  -h, --help        print this message and exit',
     '  -i, --identity    ssh identity file to use, passed directly to ssh',
+    '  -j, --join        join hosts together by unique output',
     '  -l, --login       the username to login as, passed directly to ssh',
     '  -m, --max-jobs    the maximum number of jobs to run concurrently, defaults to 30',
     '  -n, --dry-run     print debug information without actually running any commands',
@@ -78,9 +79,13 @@ function insarray(arr) {
 }
 
 // print progress
-function progress() {
-  console.log('[%s] finished %s/%s',
-      'sshp'.cyan, ('' + i).magenta, ('' + hosts.length).magenta);
+function progress(cr) {
+  process.stdout.write(util.format('[%s] finished %s/%s%s',
+      'sshp'.cyan,
+      ('' + i).magenta,
+      ('' + hosts.length).magenta,
+      cr ? '\r' : '\n'
+  ));
 }
 
 // command line arguments
@@ -91,6 +96,7 @@ var options = [
   'g(group)',
   'h(help)',
   'i:(identity)',
+  'j(join)',
   'l:(login)',
   'm:(max-jobs)',
   'n(dry-run)',
@@ -109,6 +115,7 @@ var dryrun = false;
 var errorcodes = false;
 var file;
 var group = false;
+var join = false;
 var login;
 var maxjobs = 30;
 var nostrict = false;
@@ -123,6 +130,7 @@ while ((option = parser.getopt()) !== undefined) {
     case 'g': group = true; break;
     case 'h': console.log(usage()); process.exit(0);
     case 'i': identity = option.optarg; break;
+    case 'j': join = true; break;
     case 'l': login = option.optarg; break;
     case 'm': maxjobs = +option.optarg; break;
     case 'n': dryrun = true; debug = true; break;
@@ -141,10 +149,14 @@ while ((option = parser.getopt()) !== undefined) {
   }
 }
 var command = process.argv.slice(parser.optind());
+if (!command.length) {
+  console.error('no command specified');
+  process.exit(1);
+}
 
 // read the hosts
 file = file || '/dev/stdin';
-var hosts = fs.readFileSync(file).toString().split('\n').filter(function(a) { return a; });
+var hosts = fs.readFileSync(file, 'utf-8').split('\n').filter(function(a) { return a; });
 
 var progstart = new Date();
 vlog('starting: %s', progstart.toISOString());
@@ -163,6 +175,9 @@ if (nostrict) sshcommand.push('-o', 'StrictHostKeyChecking=no');
 // make a queue
 var q = async.queue(processhost, maxjobs);
 
+// store output
+var output = {};
+
 // loop the hosts and go!
 hosts.forEach(function(host) {
   q.push(host, function() {});
@@ -170,6 +185,27 @@ hosts.forEach(function(host) {
 q.drain = function() {
   var progend = new Date();
   var delta = progend - progstart;
+
+  if (join && !group) {
+    // figure out what hosts had matching output
+    var diff = {};
+    Object.keys(output).forEach(function(host) {
+      var text = output[host];
+      diff[text] = diff[text] || [];
+      diff[text].push(host);
+    });
+
+    var keys = Object.keys(diff);
+    console.log('\n\nfinished with %s unique result%s\n',
+        ('' + keys.length).magenta,
+        keys.length === 1 ? '' : 's');
+    keys.forEach(function(text) {
+      var hosts = diff[text];
+      console.log('hosts: %s'.grey, hosts.join(' ').cyan);
+      console.log(text);
+    });
+  }
+
   vlog('finished: %s (%s ms)', progend.toISOString(), ('' + delta).magenta);
   process.exit(exitcode);
 };
@@ -191,7 +227,7 @@ function processhost(host, cb) {
   var child = child_process.spawn(cmd[0], cmd.slice(1));
 
   // hook up stdout
-  if (group) {
+  if (group || join) {
     child.stdout.on('data', out)
   } else {
     var stdout = new ll.LineReadStream(child.stdout);
@@ -207,6 +243,9 @@ function processhost(host, cb) {
         lasthost = host;
       }
       process.stdout.write(d.green);
+    } else if (join) {
+      output[host] = output[host] || '';
+      output[host] += d;
     } else {
       line = ll.chomp(d);
       console.log('[%s] %s', host.cyan, line.green);
@@ -214,7 +253,7 @@ function processhost(host, cb) {
   }
 
   // hook up stderr
-  if (group) {
+  if (group || join) {
     child.stderr.on('data', err);
   } else {
     var stderr = new ll.LineReadStream(child.stderr);
@@ -230,6 +269,9 @@ function processhost(host, cb) {
         lasthost = host;
       }
       process.stderr.write(d.red);
+    } else if (join) {
+      output[host] = output[host] || '';
+      output[host] += d;
     } else {
       line = ll.chomp(d);
       console.error('[%s] %s', host.cyan, line.red);
@@ -238,13 +280,17 @@ function processhost(host, cb) {
 
   // capture the exit
   child.on('exit', function(code) {
+    ++i;
     exitcode += code;
     if (errorcodes) {
       var delta = new Date() - started;
       console.log('[%s] exited: %s (%s ms)', host.cyan,
           code === 0 ? ('' + code).green : ('' + code).red, ('' + delta).magenta);
+    } else if (join) {
+      progress(true);
     }
-    ++i;
     cb();
   });
 }
+
+if (join) progress(true);
