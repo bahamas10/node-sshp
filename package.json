@@ -26,6 +26,7 @@
   "engines": {
     "node": "*"
   },
+  "engine": "node >= 0.8.0",
   "keywords": [
     "ssh",
     "parallel",

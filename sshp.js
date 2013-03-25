@@ -154,6 +154,12 @@ var command = process.argv.slice(parser.optind());
 if (!command.length) {
   console.error('no command specified');
   process.exit(1);
+} else if (group && join) {
+  console.error('option `-g` and `-j` are mutually exclusive');
+  process.exit(1);
+} else if (join && silent) {
+  console.error('option `-j` and `-s` are mutually exclusive');
+  process.exit(1);
 }
 
 // read the hosts
@@ -211,7 +217,7 @@ q.drain = function() {
           outputkeys.length,
           hosts.join(' ').cyan
       );
-      console.log(text || 'no output'.grey);
+      console.log(text || 'no output\n'.grey);
     });
   }
 
@@ -288,7 +294,7 @@ function processhost(host, cb) {
   }
 
   // capture the exit
-  child.on('exit', function(code) {
+  child.on('close', function(code) {
     ++i;
     exitcode += code;
     if (errorcodes) {
