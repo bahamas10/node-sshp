@@ -192,7 +192,8 @@ q.drain = function() {
   if (join && !group) {
     // figure out what hosts had matching output
     var diff = {};
-    Object.keys(output).forEach(function(host) {
+    var outputkeys = Object.keys(output);
+    outputkeys.forEach(function(host) {
       var text = output[host];
       diff[text] = diff[text] || [];
       diff[text].push(host);
@@ -201,10 +202,15 @@ q.drain = function() {
     var keys = Object.keys(diff);
     console.log('\n\nfinished with %s unique result%s\n',
         ('' + keys.length).magenta,
-        keys.length === 1 ? '' : 's');
+        keys.length === 1 ? '' : 's'
+    );
     keys.forEach(function(text) {
       var hosts = diff[text];
-      console.log('hosts: %s'.grey, hosts.join(' ').cyan);
+      console.log('hosts (%d/%d): %s'.grey,
+          hosts.length,
+          outputkeys.length,
+          hosts.join(' ').cyan
+      );
       console.log(text || 'no output'.grey);
     });
   }
@@ -287,8 +293,11 @@ function processhost(host, cb) {
     exitcode += code;
     if (errorcodes) {
       var delta = new Date() - started;
-      console.log('[%s] exited: %s (%s ms)', host.cyan,
-          code === 0 ? ('' + code).green : ('' + code).red, ('' + delta).magenta);
+      console.log('[%s] exited: %s (%s ms)',
+          host.cyan,
+          code === 0 ? ('' + code).green : ('' + code).red,
+          ('' + delta).magenta
+      );
     } else if (join) {
       progress(true);
     }
