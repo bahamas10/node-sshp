@@ -212,7 +212,7 @@ q.drain = function() {
     );
     keys.forEach(function(text) {
       var hosts = diff[text];
-      console.log('hosts (%d/%d): %s'.grey,
+      console.log('hosts (%d/%d): %s',
           hosts.length,
           outputkeys.length,
           hosts.join(' ').cyan
