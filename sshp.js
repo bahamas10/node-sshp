@@ -164,7 +164,8 @@ if (!command.length) {
 
 // read the hosts
 file = file || '/dev/stdin';
-var hosts = fs.readFileSync(file, 'utf-8').split('\n').filter(function(a) { return a; });
+var hosts = fs.readFileSync(file, 'utf-8').split('\n');
+hosts = hosts.filter(function(a) { return a && a.indexOf('#') !== 0; });
 
 var progstart = new Date();
 vlog('starting: %s', progstart.toISOString());
