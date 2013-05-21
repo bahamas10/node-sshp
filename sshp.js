@@ -19,7 +19,7 @@ var ll = require('lazylines');
 
 var package = require('./package.json');
 
-require('colors');
+var colors = require('colors');
 
 /**
  * Usage
@@ -43,6 +43,7 @@ function usage() {
     '    sshp -m 3 -f my_hosts.txt "ps -ef | grep process"',
     '',
     'options',
+    '  -b, --boring      disable color output',
     '  -d, --debug       turn on debugging information, defaults to false',
     '  -e, --exit-codes  print the exit code of the remote processes, defaults to false',
     '  -f, --file        a file of hosts separated by newlines, defaults to stdin',
@@ -92,6 +93,7 @@ function progress(cr) {
 
 // command line arguments
 var options = [
+  'b(boring)',
   'd(debug)',
   'e(exit-codes)',
   'f:(file)',
@@ -126,6 +128,7 @@ var quiet = false;
 var silent = false;
 while ((option = parser.getopt()) !== undefined) {
   switch (option.option) {
+    case 'b': colors.mode = 'none'; break;
     case 'd': debug = true; break;
     case 'e': errorcodes = true; break;
     case 'f': file = option.optarg; break;

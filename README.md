@@ -79,6 +79,7 @@ Usage
         sshp -m 3 -f my_hosts.txt "ps -ef | grep process"
 
     options
+      -b, --boring      disable color output
       -d, --debug       turn on debugging information, defaults to false
       -e, --exit-codes  print the exit code of the remote processes, defaults to false
       -f, --file        a file of hosts separated by newlines, defaults to stdin
