@@ -83,7 +83,7 @@ function insarray(arr) {
 
 // print progress
 function progress(cr) {
-  process.stdout.write(util.format('[%s] finished %s/%s%s',
+  process.stderr.write(util.format('[%s] finished %s/%s%s',
       'sshp'.cyan,
       ('' + i).magenta,
       ('' + hosts.length).magenta,
