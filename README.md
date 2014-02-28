@@ -86,7 +86,7 @@ Usage
       -g, --group       group the output together as it comes in by hostname, not line-by-line
       -h, --help        print this message and exit
       -j, --join        join hosts together by unique output
-      -m, --max-jobs    the maximum number of jobs to run concurrently, defaults to 30
+      -m, --max-jobs    the maximum number of jobs to run concurrently, defaults to 300
       -n, --dry-run     print debug information without actually running any commands
       -N, --no-strict   disable strict host key checking for ssh, defaults to false
       -s, --silent      silence all stdout and stderr from remote hosts, defaults to false
