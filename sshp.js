@@ -138,7 +138,7 @@ while ((option = parser.getopt()) !== undefined) {
     case 'j': join = true; break;
     case 'l': login = option.optarg; break;
     case 'm': maxjobs = +option.optarg; break;
-    case 'n': dryrun = true; debug = true; break;
+    case 'n': dryrun = true; break;
     case 'N': nostrict = true; break;
     case 'p': port = +option.optarg; break;
     case 'q': quiet = true; break;
