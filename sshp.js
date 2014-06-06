@@ -177,6 +177,8 @@ vlog('hosts (%s): %s', ('' + hosts.length).magenta, insarray(hosts));
 vlog('command: %s', insarray(command));
 vlog('maxjobs: %s', ('' + maxjobs).green);
 
+var host_color = colors.mode === 'none' ? identity : make_colorizor(130);
+
 // construct the SSH command
 var sshcommand = ['ssh'];
 if (quiet) sshcommand.push('-q');
@@ -258,7 +260,7 @@ function processhost(host, cb) {
 
     if (group) {
       if (host !== lasthost) {
-        console.log('[%s] ', host.cyan);
+        console.log('[%s] ', host_color(host));
         lasthost = host;
       }
       process.stdout.write(d.green);
@@ -267,7 +269,7 @@ function processhost(host, cb) {
       output[host] += d;
     } else {
       line = ll.chomp(d);
-      console.log('[%s] %s', host.cyan, line.green);
+      console.log('[%s] %s', host_color(host), line.green);
     }
   }
 
@@ -284,7 +286,7 @@ function processhost(host, cb) {
 
     if (group) {
       if (host !== lasthost) {
-        console.log('[%s] ', host.cyan);
+        console.log('[%s] ', host_color(host));
         lasthost = host;
       }
       process.stderr.write(d.red);
@@ -293,7 +295,7 @@ function processhost(host, cb) {
       output[host] += d;
     } else {
       line = ll.chomp(d);
-      console.error('[%s] %s', host.cyan, line.red);
+      console.error('[%s] %s', host_color(host), line.red);
     }
   }
 
@@ -304,7 +306,7 @@ function processhost(host, cb) {
     if (errorcodes) {
       var delta = new Date() - started;
       console.log('[%s] exited: %s (%s ms)',
-          host.cyan,
+          host_color(host),
           code === 0 ? ('' + code).green : ('' + code).red,
           ('' + delta).magenta
       );
@@ -314,5 +316,28 @@ function processhost(host, cb) {
     cb();
   });
 }
+
+function z_p_star(n, p) {
+  var mult = n;
+  return function() { return n = (n * mult) % p }
+}
+
+var CLEAR_COLOR = '\u001b[39m'
+
+function color256(n) {
+  return '\u001b[38;5;' + n + 'm';
+}
+
+function make_colorizor(seed) {
+  // 193 is the nearest prime to 256-64=192
+  var cycle = z_p_star((seed + 1) % 193, 193);
+  var host_colors = {};
+  return function(host) {
+    var color = cycle() + 32;
+    return host_colors[host] || (host_colors[host] = color256(color) + host + CLEAR_COLOR);
+  };
+}
+
+function identity(x) { return x; }
 
 if (join) progress(true);
