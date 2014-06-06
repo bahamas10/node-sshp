@@ -329,6 +329,7 @@ function color256(n) {
 }
 
 function make_colorizor(seed) {
+  // 193 is the nearest prime to 256-64=192
   var cycle = z_p_star((seed + 1) % 193, 193);
   var host_colors = {};
   return function(host) {
