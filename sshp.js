@@ -49,7 +49,7 @@ function usage() {
     '  -f, --file        a file of hosts separated by newlines, defaults to stdin',
     '  -g, --group       group the output together as it comes in by hostname, not line-by-line',
     '  -h, --help        print this message and exit',
-    '  -j, --join        join hosts together by unique output',
+    '  -j, --join        join hosts together by unique output (aggregation mode)',
     '  -m, --max-jobs    the maximum number of jobs to run concurrently, defaults to 300',
     '  -n, --dry-run     print debug information without actually running any commands',
     '  -N, --no-strict   disable strict host key checking for ssh, defaults to false',
@@ -67,7 +67,8 @@ function usage() {
 
 // verbose log
 function vlog() {
-  if (!debug) return;
+  if (!debug)
+    return;
   var s = util.format.apply(this, arguments);
   console.log('[%s] %s', 'sshp'.cyan, s);
 }
@@ -167,8 +168,9 @@ if (!command.length) {
 
 // read the hosts
 file = file || '/dev/stdin';
-var hosts = fs.readFileSync(file, 'utf-8').split('\n');
-hosts = hosts.filter(function(a) { return a && a.indexOf('#') !== 0; });
+var hosts = fs.readFileSync(file, 'utf-8').trim().split('\n').filter(function(a) {
+  return a && a.indexOf('#') !== 0;
+});
 
 var progstart = new Date();
 vlog('starting: %s', progstart.toISOString());
@@ -181,10 +183,14 @@ var host_color = colors.mode === 'none' ? identity : make_colorizor(130);
 
 // construct the SSH command
 var sshcommand = ['ssh'];
-if (quiet) sshcommand.push('-q');
-if (port) sshcommand.push('-p', port);
-if (login) sshcommand.push('-l', login);
-if (nostrict) sshcommand.push('-o', 'StrictHostKeyChecking=no');
+if (quiet)
+  sshcommand.push('-q');
+if (port)
+  sshcommand.push('-p', port);
+if (login)
+  sshcommand.push('-l', login);
+if (nostrict)
+  sshcommand.push('-o', 'StrictHostKeyChecking=no');
 
 // make a queue
 var q = async.queue(processhost, maxjobs);
@@ -197,6 +203,8 @@ hosts.forEach(function(host) {
   output[host] = '';
   q.push(host, function() {});
 });
+
+// program finished
 q.drain = function() {
   var progend = new Date();
   var delta = progend - progstart;
@@ -243,37 +251,41 @@ function processhost(host, cb) {
   var started = new Date();
   var cmd = sshcommand.concat(host, command);
   vlog('[%s] %s', host.yellow, insarray(cmd));
-  if (dryrun) return cb();
+
+  // return early for dry run
+  if (dryrun)
+    return cb();
 
   var child = child_process.spawn(cmd[0], cmd.slice(1));
 
   // hook up stdout
+  child.stdout.setEncoding('utf-8');
   if (group || join) {
-    child.stdout.on('data', out)
+    child.stdout.on('data', out);
   } else {
     var stdout = new ll.LineReadStream(child.stdout);
     stdout.on('line', out);
   }
   function out(d) {
-    if (silent) return;
-    d = d.toString();
+    if (silent)
+      return;
 
     if (group) {
       if (host !== lasthost) {
-        console.log('[%s] ', host_color(host));
+        console.log('[%s]', host_color(host));
         lasthost = host;
       }
       process.stdout.write(d.green);
     } else if (join) {
-      output[host] = output[host] || '';
       output[host] += d;
     } else {
-      line = ll.chomp(d);
+      var line = ll.chomp(d);
       console.log('[%s] %s', host_color(host), line.green);
     }
   }
 
   // hook up stderr
+  child.stderr.setEncoding('utf-8');
   if (group || join) {
     child.stderr.on('data', err);
   } else {
@@ -281,20 +293,19 @@ function processhost(host, cb) {
     stderr.on('line', err);
   }
   function err(d) {
-    if (silent) return;
-    d = d.toString();
+    if (silent)
+      return;
 
     if (group) {
       if (host !== lasthost) {
-        console.log('[%s] ', host_color(host));
+        console.log('[%s]', host_color(host));
         lasthost = host;
       }
       process.stderr.write(d.red);
     } else if (join) {
-      output[host] = output[host] || '';
       output[host] += d;
     } else {
-      line = ll.chomp(d);
+      var line = ll.chomp(d);
       console.error('[%s] %s', host_color(host), line.red);
     }
   }
@@ -317,12 +328,13 @@ function processhost(host, cb) {
   });
 }
 
+// colorizer functions
 function z_p_star(n, p) {
   var mult = n;
-  return function() { return n = (n * mult) % p }
+  return function() { return n = (n * mult) % p; };
 }
 
-var CLEAR_COLOR = '\u001b[39m'
+var CLEAR_COLOR = '\u001b[39m';
 
 function color256(n) {
   return '\u001b[38;5;' + n + 'm';
@@ -340,4 +352,5 @@ function make_colorizor(seed) {
 
 function identity(x) { return x; }
 
-if (join) progress(true);
+if (join)
+  progress(true);
