@@ -183,7 +183,7 @@ vlog('hosts (%s): %s', ('' + hosts.length).magenta, insarray(hosts));
 vlog('command: %s', insarray(command));
 vlog('maxjobs: %s', ('' + maxjobs).green);
 
-var host_color = (colors.mode === 'none' || process.env.SSHP_NO_RAINBOW) ? identity_func : make_colorizor(130);
+var host_color = (colors.mode === 'none' || process.env.SSHP_NO_RAINBOW) ? cyan_func : make_colorizor(130);
 
 // construct the SSH command
 var sshcommand = ['ssh'];
@@ -357,7 +357,7 @@ function make_colorizor(seed) {
   };
 }
 
-function identity_func(x) { return x; }
+function cyan_func(x) { return x.cyan; }
 
 if (join)
   progress(true);
