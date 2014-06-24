@@ -54,6 +54,7 @@ function usage() {
     '  -n, --dry-run     print debug information without actually running any commands',
     '  -N, --no-strict   disable strict host key checking for ssh, defaults to false',
     '  -s, --silent      silence all stdout and stderr from remote hosts, defaults to false',
+    '  -t, --trim        trim hostnames from fqdn to short name (remove domain), defaults to false',
     '  -u, --updates     check for available updates',
     '  -v, --version     print the version number and exit',
     '',
@@ -109,6 +110,7 @@ var options = [
   'p:(port)',
   'q(quiet)',
   's(silent)',
+  't(trim)',
   'u(updates)',
   'v(version)'
 ].join('');
@@ -127,6 +129,7 @@ var nostrict = false;
 var port;
 var quiet = false;
 var silent = false;
+var trim = false;
 while ((option = parser.getopt()) !== undefined) {
   switch (option.option) {
     case 'b': colors.mode = 'none'; break;
@@ -144,6 +147,7 @@ while ((option = parser.getopt()) !== undefined) {
     case 'p': port = +option.optarg; break;
     case 'q': quiet = true; break;
     case 's': silent = true; break;
+    case 't': trim = true; break;
     case 'u': // check for updates
       require('latest').checkupdate(package, function(ret, msg) {
         console.log(msg);
@@ -200,7 +204,6 @@ var output = {};
 
 // loop the hosts and go!
 hosts.forEach(function(host) {
-  output[host] = '';
   q.push(host, function() {});
 });
 
@@ -250,6 +253,10 @@ var i = 0;
 function processhost(host, cb) {
   var started = new Date();
   var cmd = sshcommand.concat(host, command);
+  if (trim)
+    host = host.split('.')[0];
+  output[host] = '';
+
   vlog('[%s] %s', host.yellow, insarray(cmd));
 
   // return early for dry run
