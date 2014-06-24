@@ -85,11 +85,12 @@ Usage
       -f, --file        a file of hosts separated by newlines, defaults to stdin
       -g, --group       group the output together as it comes in by hostname, not line-by-line
       -h, --help        print this message and exit
-      -j, --join        join hosts together by unique output
+      -j, --join        join hosts together by unique output (aggregation mode)
       -m, --max-jobs    the maximum number of jobs to run concurrently, defaults to 300
       -n, --dry-run     print debug information without actually running any commands
       -N, --no-strict   disable strict host key checking for ssh, defaults to false
       -s, --silent      silence all stdout and stderr from remote hosts, defaults to false
+      -t, --trim        trim hostnames from fqdn to short name (remove domain), defaults to false
       -u, --updates     check for available updates
       -v, --version     print the version number and exit
 

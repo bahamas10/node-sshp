@@ -117,19 +117,19 @@ var options = [
 var parser = new getopt.BasicParser(options, process.argv);
 
 var option;
-var debug = false;
+var debug = process.env.SSHP_DEBUG;
 var dryrun = false;
-var errorcodes = false;
+var errorcodes = process.env.SSHP_ERROR_CODES;
 var file;
-var group = false;
-var join = false;
+var group = process.env.SSHP_GROUP_OUTPUT;
+var join = process.env.SSHP_JOIN_OUTPUT;
 var login;
-var maxjobs = 300;
-var nostrict = false;
+var maxjobs = +process.env.SSHP_MAX_JOBS || 300;
+var nostrict = process.env.SSHP_NO_STRICT;
 var port;
-var quiet = false;
-var silent = false;
-var trim = false;
+var quiet = process.env.SSHP_QUIET;
+var silent = process.env.SSHP_SILENT;
+var trim = process.env.SSHP_TRIM;
 while ((option = parser.getopt()) !== undefined) {
   switch (option.option) {
     case 'b': colors.mode = 'none'; break;
@@ -183,7 +183,7 @@ vlog('hosts (%s): %s', ('' + hosts.length).magenta, insarray(hosts));
 vlog('command: %s', insarray(command));
 vlog('maxjobs: %s', ('' + maxjobs).green);
 
-var host_color = colors.mode === 'none' ? identity : make_colorizor(130);
+var host_color = (colors.mode === 'none' || process.env.SSHP_NO_RAINBOW) ? identity_func : make_colorizor(130);
 
 // construct the SSH command
 var sshcommand = ['ssh'];
@@ -357,7 +357,7 @@ function make_colorizor(seed) {
   };
 }
 
-function identity(x) { return x; }
+function identity_func(x) { return x; }
 
 if (join)
   progress(true);
