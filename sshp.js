@@ -43,6 +43,7 @@ function usage() {
     '    sshp -m 3 -f my_hosts.txt "ps -ef | grep process"',
     '',
     'options',
+    '  -a, --anonymous   hide hostname prefix, defaults to false',
     '  -b, --boring      disable color output',
     '  -d, --debug       turn on debugging information, defaults to false',
     '  -e, --exit-codes  print the exit code of the remote processes, defaults to false',
@@ -95,6 +96,7 @@ function progress(cr) {
 
 // command line arguments
 var options = [
+  'a(anonymous)',
   'b(boring)',
   'd(debug)',
   'e(exit-codes)',
@@ -117,11 +119,13 @@ var options = [
 var parser = new getopt.BasicParser(options, process.argv);
 
 var option;
+var anonymous = false;
 var debug = process.env.SSHP_DEBUG;
 var dryrun = false;
 var errorcodes = process.env.SSHP_ERROR_CODES;
 var file;
 var group = process.env.SSHP_GROUP_OUTPUT;
+var identity;
 var join = process.env.SSHP_JOIN_OUTPUT;
 var login;
 var maxjobs = +process.env.SSHP_MAX_JOBS || 300;
@@ -132,6 +136,7 @@ var silent = process.env.SSHP_SILENT;
 var trim = process.env.SSHP_TRIM;
 while ((option = parser.getopt()) !== undefined) {
   switch (option.option) {
+    case 'a': anonymous = true; break;
     case 'b': colors.mode = 'none'; break;
     case 'd': debug = true; break;
     case 'e': errorcodes = true; break;
@@ -195,6 +200,8 @@ if (login)
   sshcommand.push('-l', login);
 if (nostrict)
   sshcommand.push('-o', 'StrictHostKeyChecking=no');
+if (identity)
+  sshcommand.push('-i', identity);
 
 // make a queue
 var q = async.queue(processhost, maxjobs);
@@ -287,7 +294,10 @@ function processhost(host, cb) {
       output[host] += d;
     } else {
       var line = ll.chomp(d);
-      console.log('[%s] %s', host_color(host), line.green);
+      if (anonymous)
+        console.log(line.green);
+      else
+        console.log('[%s] %s', host_color(host), line.green);
     }
   }
 
@@ -313,7 +323,10 @@ function processhost(host, cb) {
       output[host] += d;
     } else {
       var line = ll.chomp(d);
-      console.error('[%s] %s', host_color(host), line.red);
+      if (anonymous)
+        console.error(line.red);
+      else
+        console.error('[%s] %s', host_color(host), line.red);
     }
   }
 
