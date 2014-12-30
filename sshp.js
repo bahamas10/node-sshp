@@ -197,6 +197,7 @@ var host_color = (colors.mode === 'none' || process.env.SSHP_NO_RAINBOW) ? cyan_
 
 // construct the SSH command
 var sshcommand = ['ssh'];
+sshcommand.push('-n');
 if (quiet)
   sshcommand.push('-q');
 if (port)
