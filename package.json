@@ -15,11 +15,12 @@
     "test": "for f in tests/*.js; do echo \"$f\"; node \"$f\" || exit 1; done; echo 'Passed!'"
   },
   "dependencies": {
-    "posix-getopt": "~1.0.0",
+    "async": "~0.1.22",
+    "brace-compression": "0.0.0",
     "colors": "~0.6.0-1",
     "latest": "~0.1.2",
     "lazylines": "~1.0.0",
-    "async": "~0.1.22"
+    "posix-getopt": "~1.0.0"
   },
   "devDependencies": {},
   "optionalDependencies": {},

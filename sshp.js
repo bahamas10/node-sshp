@@ -14,6 +14,7 @@ var fs = require('fs');
 var util = require('util');
 
 var async = require('async');
+var compress = require('brace-compression');
 var getopt = require('posix-getopt');
 var ll = require('lazylines');
 
@@ -239,7 +240,7 @@ q.drain = function() {
       console.log('hosts (%d/%d): %s',
           hosts.length,
           outputkeys.length,
-          hosts.join(' ').cyan
+          compress(hosts).cyan
       );
       console.log(text || 'no output\n'.grey);
     });
