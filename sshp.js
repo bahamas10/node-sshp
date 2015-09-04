@@ -65,6 +65,7 @@ function usage() {
     '  -l, --login       the username to login as',
     '  -q, --quiet       run ssh in quiet mode',
     '  -p, --port        the ssh port',
+    '  -y, --tty         allocate a pseudo-tty for the ssh session'
   ].join('\n');
 }
 
@@ -115,7 +116,8 @@ var options = [
   's(silent)',
   't(trim)',
   'u(updates)',
-  'v(version)'
+  'v(version)',
+  'y(tty)'
 ].join('');
 var parser = new getopt.BasicParser(options, process.argv);
 
@@ -135,6 +137,7 @@ var port;
 var quiet = process.env.SSHP_QUIET;
 var silent = process.env.SSHP_SILENT;
 var trim = process.env.SSHP_TRIM;
+var pseudotty;
 while ((option = parser.getopt()) !== undefined) {
   switch (option.option) {
     case 'a': anonymous = true; break;
@@ -155,6 +158,7 @@ while ((option = parser.getopt()) !== undefined) {
     case 's': silent = true; break;
     case 't': trim = true; break;
     case 'u': // check for updates
+    case 'y': pseudotty = true; break;
       require('latest').checkupdate(package, function(ret, msg) {
         console.log(msg);
         process.exit(ret);
@@ -203,6 +207,9 @@ if (nostrict)
   sshcommand.push('-o', 'StrictHostKeyChecking=no');
 if (identity)
   sshcommand.push('-i', identity);
+if (pseudotty)
+  sshcommand.push('-t');
+
 
 // make a queue
 var q = async.queue(processhost, maxjobs);
