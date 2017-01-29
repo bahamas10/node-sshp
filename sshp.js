@@ -158,12 +158,12 @@ while ((option = parser.getopt()) !== undefined) {
     case 's': silent = true; break;
     case 't': trim = true; break;
     case 'u': // check for updates
-    case 'y': pseudotty = true; break;
       require('latest').checkupdate(package, function(ret, msg) {
         console.log(msg);
         process.exit(ret);
       });
       return;
+    case 'y': pseudotty = true; break;
     case 'v': console.log(package.version); process.exit(0);
     default: console.error(usage()); process.exit(1); break;
   }
