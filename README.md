@@ -79,6 +79,7 @@ Usage
         sshp -m 3 -f my_hosts.txt "ps -ef | grep process"
 
     options
+      -a, --anonymous   hide hostname prefix, defaults to false
       -b, --boring      disable color output
       -d, --debug       turn on debugging information, defaults to false
       -e, --exit-codes  print the exit code of the remote processes, defaults to false
@@ -99,6 +100,7 @@ Usage
       -l, --login       the username to login as
       -q, --quiet       run ssh in quiet mode
       -p, --port        the ssh port
+      -y, --tty         allocate a pseudo-tty for the ssh session
 
 License
 -------
