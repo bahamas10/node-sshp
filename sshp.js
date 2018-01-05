@@ -238,7 +238,7 @@ q.drain = function() {
       diff[text].push(host);
     });
 
-    var keys = Object.keys(diff);
+    var keys = Object.keys(diff).sort();
     console.log('\n\nfinished with %s unique result%s\n',
         ('' + keys.length).magenta,
         keys.length === 1 ? '' : 's'
