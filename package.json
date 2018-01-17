@@ -1,9 +1,14 @@
 {
   "name": "sshp",
   "description": "simple, intuitive, no bullshit approach to parallel ssh",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "author": "Dave Eddy <dave@daveeddy.com> (http://www.daveeddy.com)",
-  "contributors": [],
+  "contributors": [
+    {
+      "name": "Clay Anderson",
+      "github": "claycephas"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/bahamas10/node-sshp.git"
