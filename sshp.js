@@ -282,12 +282,16 @@ function processhost(host, cb) {
   var child = child_process.spawn(cmd[0], cmd.slice(1));
 
   // hook up stdout
-  child.stdout.setEncoding('utf-8');
-  if (group || join) {
-    child.stdout.on('data', out);
+  if (!child.stdout) {
+    err('Unable to read stdout from ' + host);
   } else {
-    var stdout = new ll.LineReadStream(child.stdout);
-    stdout.on('line', out);
+    child.stdout.setEncoding('utf-8');
+    if (group || join) {
+      child.stdout.on('data', out);
+    } else {
+      var stdout = new ll.LineReadStream(child.stdout);
+      stdout.on('line', out);
+    }
   }
   function out(d) {
     if (silent)
@@ -311,12 +315,16 @@ function processhost(host, cb) {
   }
 
   // hook up stderr
-  child.stderr.setEncoding('utf-8');
-  if (group || join) {
-    child.stderr.on('data', err);
+  if (!child.stdout) {
+    err('Unable to read stderr from ' + host);
   } else {
-    var stderr = new ll.LineReadStream(child.stderr);
-    stderr.on('line', err);
+    child.stderr.setEncoding('utf-8');
+    if (group || join) {
+      child.stderr.on('data', err);
+    } else {
+      var stderr = new ll.LineReadStream(child.stderr);
+      stderr.on('line', err);
+    }
   }
   function err(d) {
     if (silent)
