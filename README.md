@@ -3,6 +3,8 @@ sshp
 
 simple, intuitive, no bullshit approach to parallel ssh
 
+**UPDATE 2021**: This project has been rewritten in C at [sshp](https://github.com/bahamas10/sshp).
+
 Installation
 ------------
 
